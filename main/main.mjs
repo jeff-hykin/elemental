@@ -8,7 +8,7 @@ export class Elemental {
         this.components = components||{}
         this.middleware = middleware||{}
         this.errorComponentFactory = errorComponentFactory||defaultErrorComponentFactory
-        this.html = xhtm.bind((args)=>this.createElement(...args))
+        this.html = xhtm.bind((...args)=>this.createElement(...args))
         this.css = Elemental.css
     }
 
