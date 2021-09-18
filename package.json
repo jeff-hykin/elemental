@@ -10,7 +10,12 @@
     "type": "git",
     "url": "git+https://github.com/jeff-hykin/elemental.git"
   },
-  "keywords": [],
+  "keywords": [
+      "dom",
+      "elemental",
+      "template",
+      "jsx"
+  ],
   "author": "",
   "license": "MIT",
   "bugs": {
