@@ -17,8 +17,8 @@
     "url": "https://github.com/jeff-hykin/elemental/issues"
   },
   "homepage": "https://github.com/jeff-hykin/elemental#readme",
-  "exports": { "import": "./main/main.js" },
-  "module": "./main/main.js",
+  "exports": { "import": "./main/main.mjs" },
+  "module": "./main/main.mjs",
   "devDependencies": {
     "xhtm": "^1.5.3"
   }
