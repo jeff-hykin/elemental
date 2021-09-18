@@ -1,6 +1,6 @@
 {
   "name": "@!!!!!/elemental",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Control the elements using JS",
   "main": "main/main.js",
   "scripts": {
@@ -17,7 +17,10 @@
     "url": "https://github.com/jeff-hykin/elemental/issues"
   },
   "homepage": "https://github.com/jeff-hykin/elemental#readme",
-  "exports": { "import": "./main/main.mjs" },
+  "exports": {
+      "import": "./main/main.mjs",
+      "require": "./main/main.js"
+  },
   "module": "./main/main.mjs",
   "devDependencies": {
     "xhtm": "^1.5.3"
