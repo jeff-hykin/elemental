@@ -1,6 +1,6 @@
 {
   "name": "@!!!!!/elemental",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Control the elements using JS",
   "main": "main/main.js",
   "scripts": {
