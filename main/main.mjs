@@ -162,21 +162,25 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
     // 
     // children
     // 
-    childrenContainer.style.all = "unset"
-    childrenContainer.style.display = "flex"
-    childrenContainer.style.flexDirection = "column"
-    childrenContainer.style.marginTop = "1.3rem"
+    childContainer.style.all = "unset"
+    childContainer.style.display = "flex"
+    childContainer.style.flexDirection = "column"
+    childContainer.style.marginTop = "1.3rem"
     if (children instanceof Array) {
         for (const [key, value] of Object.entries(children)) {
             if (typeof each == 'string') {
-                childrenContainer.appendChild(new window.Text(each))
-            } else if (each instanceof Node) {
-                childrenContainer.appendChild(each)
+                childContainer.appendChild(new window.Text(value))
+            } else if (value instanceof Node) {
+                childContainer.appendChild(value)
             }
         }
     }
-    element.appendChild(childrenContainer)
+    element.appendChild(childContainer)
     return element
+}
+
+function isConstructor(obj) {
+    return !!obj.prototype && !!obj.prototype.constructor.name;
 }
 
 // 
