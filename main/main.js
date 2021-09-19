@@ -106,6 +106,11 @@ function appendChildren(element, ...children) {
         } else if (each instanceof Function) {
             // recursively
             appendChildren(element, each())
+        } else if (each instanceof Promise) {
+            const elementPromise = each
+            const placeholder = elementPromise.placeholder || document.createElement("div")
+            setTimeout(async () => placeholder.replaceWith(await elementPromise), 0)
+            element.appendChild(placeholder)
         // some elements are not HTML nodes and are still valid
         } else if (each != null && each instanceof Object) {
             element.appendChild(each)
