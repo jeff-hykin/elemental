@@ -32,7 +32,7 @@ class Elemental {
             try {
                 output = isConstructor(key) ? new key({...properties, children}) : key({...properties, children})
             } catch (error) {
-                return elemental.errorComponentFactory({...properties, children}, key, error)
+                return this.errorComponentFactory({...properties, children}, key, error)
             }
             // allow async components
             if (output instanceof Promise) {
