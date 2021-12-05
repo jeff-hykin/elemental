@@ -25,7 +25,7 @@ class Elemental {
             // TODO: handle middleware creating invalid arguments
         }
         
-        const [ key, properties, ...children ] = args
+        let [ key, properties, ...children ] = args
         Elemental.debug && console.debug(`key, properties, children is:`,key, properties, children)
         // lookup custom components
         if (this.components[key] instanceof Function) {
