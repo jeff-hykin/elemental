@@ -102,6 +102,11 @@ function appendChildren(element, ...children) {
     for (const each of children) {
         if (typeof each == 'string') {
             element.appendChild(new window.Text(each))
+        } else if (each == null) {
+            // empty node
+            element.appendChild(new window.Text(""))
+        } else if (!(each instanceof Object)) {
+            element.appendChild(new window.Text(`${each}`))
         } else if (each instanceof Node) {
             element.appendChild(each)
         } else if (each instanceof Array) {
