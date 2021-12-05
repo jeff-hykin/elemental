@@ -13,6 +13,8 @@ export class Elemental {
     }
 
     createElement(...args) {
+        Elemental.debug && console.debug(`args is:`,args)
+
         // run middleware
         for (const middleware of (this.middleware[Elemental.allTags]||[]).concat((this.middleware[args[0]]||[]))) {
             try {
@@ -23,7 +25,8 @@ export class Elemental {
             // TODO: handle middleware creating invalid arguments
         }
         
-        const [ key, properties, ...children ] = args
+        let [ key, properties, ...children ] = args
+        Elemental.debug && console.debug(`key, properties, children is:`,key, properties, children)
         // lookup custom components
         if (this.components[key] instanceof Function) {
             key = this.components[key]
@@ -99,6 +102,11 @@ function appendChildren(element, ...children) {
     for (const each of children) {
         if (typeof each == 'string') {
             element.appendChild(new window.Text(each))
+        } else if (each == null) {
+            // empty node
+            element.appendChild(new window.Text(""))
+        } else if (!(each instanceof Object)) {
+            element.appendChild(new window.Text(`${each}`))
         } else if (each instanceof Node) {
             element.appendChild(each)
         } else if (each instanceof Array) {
@@ -136,6 +144,7 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
     element.style.fontFamily = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif'
     element.style.fontSize = '18px'
     element.style.fontWeight = '400'
+    element.style.overflow = 'auto'
     element.innerHTML = `I'm sorry, there was an error when loading this part of the page 🙁 `
     
     // 
