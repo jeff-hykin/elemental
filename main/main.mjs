@@ -50,14 +50,22 @@ export class Elemental {
             }
         }
         // create either an html element or an svg element
-        const element = Elemental.exclusivelySvgElements.has(key) ? document.createElementNS('http://www.w3.org/2000/svg', key) : document.createElement(key)
+        const isSvg = Elemental.exclusivelySvgElements.has(key)
+        const element = isSvg ? document.createElementNS('http://www.w3.org/2000/svg', key) : document.createElement(key)
         if (properties instanceof Object) {
             for (const [key, value] of Object.entries(properties)) {
                 try {
-                    element.setAttribute(key, value)
+                    if (isSvg) {
+                        const kebabCase = key.replace(/(?<=[a-z])([A-Z])(?=[a-z])/g, (each)=>`-${each.toLowerCase()}`)
+                        element.setAttribute(kebabCase, value)
+                    } else {
+                        element.setAttribute(key.toLowerCase(), value)
+                    }
                 } catch (error) {
                 }
-                element[key] = value
+                try {
+                    element[key] = value
+                } catch (error) {}
             }
         }
         return appendChildren(element, ...children)
