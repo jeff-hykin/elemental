@@ -13,6 +13,8 @@ class Elemental {
     }
 
     createElement(...args) {
+        Elemental.debug && console.debug(`args is:`,args)
+
         // run middleware
         for (const middleware of (this.middleware[Elemental.allTags]||[]).concat((this.middleware[args[0]]||[]))) {
             try {
@@ -24,6 +26,7 @@ class Elemental {
         }
         
         const [ key, properties, ...children ] = args
+        Elemental.debug && console.debug(`key, properties, children is:`,key, properties, children)
         // lookup custom components
         if (this.components[key] instanceof Function) {
             key = this.components[key]
@@ -136,6 +139,7 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
     element.style.fontFamily = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif'
     element.style.fontSize = '18px'
     element.style.fontWeight = '400'
+    element.style.overflow = 'auto'
     element.innerHTML = `I'm sorry, there was an error when loading this part of the page 🙁 `
     
     // 
@@ -202,4 +206,7 @@ module.exports = {
     html: (new Elemental()).html,
     css: Elemental.css,
     allTags: Elemental.allTags,
+    set degbug(value) {
+        Elemental.debug = value
+    }
 }

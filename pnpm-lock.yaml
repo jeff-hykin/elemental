@@ -1,0 +1,13 @@
+lockfileVersion: 5.3
+
+specifiers:
+  xhtm: ^1.5.3
+
+devDependencies:
+  xhtm: 1.5.3
+
+packages:
+
+  /xhtm/1.5.3:
+    resolution: {integrity: sha512-gC4fNPRcrJUc5WPY/tjRA3RpDWPqXtbtVeechBd7yCBUpo57K33fgPcobictOYaAy5bFB4UXDBxvDWQPXCtPCA==}
+    dev: true
