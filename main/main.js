@@ -2,13 +2,15 @@
 var e="",t="";function o(r){var p,a,l,s,c=arguments,i=this,n=0,d=[],h=0,u=[],f=0;d.root=!0;var g=function(e,o,r){void 0===o&&(o=[]);var p=0;return(e=r||e!==t?e.replace(/\ue001/g,e=>u[f++]):u[f++].slice(1,-1))?(e.replace(/\ue000/g,(t,r)=>(r&&o.push(e.slice(p,r)),p=r+1,o.push(c[++h]))),p<e.length&&o.push(e.slice(p)),o.length>1?o:o[0]):e},m=()=>{[d,s,...p]=d,d.push(i(s,...p))};return r.join(e).replace(/<!--[^]*-->/g,"").replace(/<!\[CDATA\[[^]*\]\]>/g,"").replace(/('|")[^\1]*?\1/g,e=>(u.push(e),t)).replace(/\s+/g," ").replace(/(?:^|>)([^<]*)(?:$|<)/g,(e,t,r,p)=>{var c,i;if(r&&p.slice(n,r).replace(/(\S)\/$/,"$1 /").split(" ").map((e,t)=>{if("/"===e[0])c=i||e.slice(1)||1;else if(t){if(e){var r=d[2]||(d[2]={});"..."===e.slice(0,3)?Object.assign(r,arguments[++h]):([a,l]=e.split("="),r[g(a)]=!l||g(l))}}else{for(i=g(e);o.close[d[1]+i];)m();d=[d,i,null],o.empty[i]&&(c=i)}}),c)for(m();s!==c&&o.close[s];)m();n=r+e.length,t&&" "!==t&&g((s=0,t),d,!0)}),d.root||m(),d.length>1?d:d[0]}o.empty={},o.close={},"area base br col command embed hr img input keygen link meta param source track wbr ! !doctype ? ?xml".split(" ").map(e=>o.empty[e]=o.empty[e.toUpperCase()]=!0);var r={li:"",dt:"dd",dd:"dt",p:"address article aside blockquote details div dl fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 header hgroup hr main menu nav ol pre section table",rt:"rp",rp:"rt",optgroup:"",option:"optgroup",caption:"tbody thead tfoot tr colgroup",colgroup:"thead tbody tfoot tr caption",thead:"tbody tfoot caption",tbody:"tfoot caption",tfoot:"caption",tr:"tbody tfoot",td:"th tr",th:"td tr tbody"},p=function(e){[...r[e].split(" "),e].map(t=>{o.close[e]=o.close[e.toUpperCase()]=o.close[e+t]=o.close[e.toUpperCase()+t]=o.close[e+t.toUpperCase()]=o.close[e.toUpperCase()+t.toUpperCase()]=!0})};for(var a in r)p(a);
 const xhtm = o
 
-class Elemental {
+const ElementalSymbol = Symbol.for("Elemental")
+class ElementalClass {
     constructor(components={}, options={}) {
         const {middleware, errorComponentFactory} = options
         this.components = components||{}
         this.middleware = middleware||{}
         this.errorComponentFactory = errorComponentFactory||defaultErrorComponentFactory
         this.html = xhtm.bind((...args)=>this.createElement(...args))
+        this.html[ElementalSymbol] = this
         this.css = Elemental.css
     }
 
@@ -20,7 +22,7 @@ class Elemental {
             try {
                 args = eachMiddleWare(args)
             } catch (error) {
-                console.error("[elemental] one of the middleware functions failed:", eachMiddleWare, args)
+                console.error("[ElementalClass] one of the middleware functions failed:", eachMiddleWare, args)
             }
             // TODO: handle middleware creating invalid arguments
         }
@@ -50,22 +52,30 @@ class Elemental {
             }
         }
         // create either an html element or an svg element
-        const element = Elemental.exclusivelySvgElements.has(key) ? document.createElementNS('http://www.w3.org/2000/svg', key) : document.createElement(key)
+        const isSvg = Elemental.exclusivelySvgElements.has(key)
+        const element = isSvg ? document.createElementNS('http://www.w3.org/2000/svg', key) : document.createElement(key)
         if (properties instanceof Object) {
             for (const [key, value] of Object.entries(properties)) {
                 try {
-                    element.setAttribute(key, value)
+                    if (isSvg) {
+                        const kebabCase = key.replace(/(?<=[a-z])([A-Z])(?=[a-z])/g, (each)=>`-${each.toLowerCase()}`)
+                        element.setAttribute(kebabCase, value)
+                    } else {
+                        element.setAttribute(key.toLowerCase(), value)
+                    }
                 } catch (error) {
                 }
-                element[key] = value
+                try {
+                    element[key] = value
+                } catch (error) {}
             }
         }
         return appendChildren(element, ...children)
     }
 
     extend(additionalComponents={}, options={}) {
-        const {additionalMiddleware, ...other} = options
-        return new Elemental(
+        const {middleware, ...other} = options
+        return Elemental(
             {...this.components, ...additionalComponents},
             {
                 middleware:{...this.middleware, ...middleware},
@@ -73,6 +83,32 @@ class Elemental {
             }
         )
     }
+}
+
+// 
+// This wrapper does two things
+//     const html = Elemental()
+//     1. html() (the function call) behaves like (new ElementalClass()).html()
+//     2. html.something (methods/attributes) behaves like (new ElementalClass()).something
+// 
+const proxySymbol = Symbol.for('Proxy')
+const Elemental = (...args) => {
+    const originalThing = (new ElementalClass(...args)).html
+    const proxyObject = new Proxy(originalThing, {
+        // Object.keys
+        ownKeys(original) { return Reflect.ownKeys(original[ElementalSymbol]) },
+        // function call (original value needs to be a function)
+        // apply(original, context, ...args) { console.log(args) },
+        get(original, key) {
+            if (key == proxySymbol) {return true}
+            const originalValue = original[ElementalSymbol][key]
+            if (originalValue) {
+                return originalValue
+            }
+            return Reflect.get(original, key, ...args)
+        },
+    })
+    return proxyObject
 }
 
 Elemental.allTags = Symbol.for("allTags")
@@ -200,18 +236,20 @@ function isConstructor(obj) {
 // 
 // protect document head by monkey patching it (this is the only monkeypatch)
 // 
-const originalHead = document.head
-Object.defineProperty(document,"head", { 
-    set: (element) => appendChildren(originalHead, ...element.childNodes),
-    get: ()=>originalHead
-})
+try {
+    const originalHead = document.head
+    Object.defineProperty(document,"head", { 
+        set: (element) => appendChildren(originalHead, ...element.childNodes),
+        get: ()=>originalHead,
+        writable: true,
+    })
+} catch (error) {
+    
+}
 
 module.exports = {
     Elemental,
-    html: (new Elemental()).html,
+    html: Elemental(),
     css: Elemental.css,
     allTags: Elemental.allTags,
-    set degbug(value) {
-        Elemental.debug = value
-    }
 }
