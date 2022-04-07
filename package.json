@@ -1,6 +1,6 @@
 {
   "name": "@!!!!!/elemental",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Control the elements using JS",
   "main": "main/main.js",
   "scripts": {
@@ -11,10 +11,10 @@
     "url": "git+https://github.com/jeff-hykin/elemental.git"
   },
   "keywords": [
-      "dom",
-      "elemental",
-      "template",
-      "jsx"
+    "dom",
+    "elemental",
+    "template",
+    "jsx"
   ],
   "author": "",
   "license": "MIT",
@@ -23,8 +23,8 @@
   },
   "homepage": "https://github.com/jeff-hykin/elemental#readme",
   "exports": {
-      "import": "./main/main.mjs",
-      "require": "./main/main.js"
+    "import": "./main/main.mjs",
+    "require": "./main/main.js"
   },
   "module": "./main/main.mjs",
   "devDependencies": {
