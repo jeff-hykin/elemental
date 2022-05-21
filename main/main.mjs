@@ -204,10 +204,13 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
             errorJsonObject[key] = `${value}`
         }
     }
-    errorDetails.innerHTML = `tag: ${errorElementPart}\nproperties: ${JSON.stringify(errorJsonObject)}\nerror: ${error}`
+    errorDetails.innerHTML = `tag: ${errorElementPart}\nproperties: ${JSON.stringify(errorJsonObject,0,4)}\nerror: ${error}`
     errorDetails.style.padding = "1rem"
     errorDetails.style.backgroundColor = "#161b22"
     errorDetails.style.color = "#789896"
+    errorDetails.style.whiteSpace = "pre"
+    errorDetails.style.maxWidth = "85vw"
+    errorDetails.style.overflow = "auto"
     element.appendChild(errorDetails)
     // 
     // children
