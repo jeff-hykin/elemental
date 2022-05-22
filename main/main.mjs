@@ -57,17 +57,21 @@ export class ElementalClass {
         if (properties instanceof Object) {
             for (const [key, value] of Object.entries(properties)) {
                 try {
+                    let joinedWithoutCommas = value
+                    if (value instanceof Array) {
+                        joinedWithoutCommas = value.join("")
+                    }
                     if (isSvg) {
                         const kebabCase = key.replace(/(?<=[a-z])([A-Z])(?=[a-z])/g, (each)=>`-${each.toLowerCase()}`)
-                        element.setAttribute(kebabCase, value)
+                        element.setAttribute(kebabCase, joinedWithoutCommas)
                     } else {
-                        element.setAttribute(key.toLowerCase(), value)
+                        element.setAttribute(key.toLowerCase(), joinedWithoutCommas)
                     }
                 } catch (error) {
+                    try {
+                        element[key] = value
+                    } catch (error) {}
                 }
-                try {
-                    element[key] = value
-                } catch (error) {}
             }
         }
         return appendChildren(element, ...children)
