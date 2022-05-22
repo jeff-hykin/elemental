@@ -1,40 +1,30 @@
-# Usage (browser, no bundler required)
+# Try this library in the Browser Console!
+
+For VS Code use [this extension](https://marketplace.visualstudio.com/items?itemName=pushqrdx.inline-html) to get syntax highlighting.
 
 ```js
-var { Elemental, html } = await import("https://cdn.skypack.dev/@!!!!!/elemental@0.0.13")
+var { html } = await import("https://deno.land/x/elementalist@0.0.14/main/main.mjs")
 
-// example 1
-document.body = html`<body>
-    Hello World
-</body>`
-
-// example 2
+// create a custom component
 const myAsyncCustomComponent = async ({ style, children, ...props }) => {
     // load a big'ole depenency like d3
     const d3 = await import('https://cdn.skypack.dev/d3')
-    return html`<span style=${style}>
+    return html`<div style=${style}>
         Do you even Async?
-        ${JSON.stringify(Object.keys(d3))}
-    </span>`
+        Keys of the d3 library: ${JSON.stringify(Object.keys(d3))}
+    </div>`
 }
-document.body = html`<body>
-    Hello World
-    <br>
-    <${myAsyncCustomComponent} />
-</body>`
 
-
-// example 3
+// add it to the local scope
 html = html.extend({myAsyncCustomComponent})
-document.body = html`<body>
-    Hello World
+
+// change some elements
+document.body = html`<body style="padding:1rem;">
+    Hello World (I render Immediately)
     <br>
-    <myAsyncCustomComponent />
+    <${myAsyncCustomComponent} style='background: darkgray; color: white; padding: 1rem; border-radius: 1rem; margin: 0.3rem;' />
+    <br>
+    this ^ takes a second to render cause it has a massive async depenency
 </body>`
 
 ```
-
-
-# Setup
-
-Everything is detailed in the `documentation/setup.md`!
