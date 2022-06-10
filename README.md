@@ -22,7 +22,7 @@ html = html.extend({myAsyncCustomComponent})
 document.body = html`<body style="padding:1rem;">
     Hello World (I render Immediately)
     <br>
-    <${myAsyncCustomComponent} style='background: darkgray; color: white; padding: 1rem; border-radius: 1rem; margin: 0.3rem;' />
+    <myAsyncCustomComponent style='background: darkgray; color: white; padding: 1rem; border-radius: 1rem; margin: 0.3rem;' />
     <br>
     this ^ takes a second to render cause it has a massive async depenency
 </body>`
