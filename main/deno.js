@@ -62,7 +62,7 @@ export class ElementalClass {
                         joinedWithoutCommas = value.join("")
                     }
                     if (isSvg) {
-                        const kebabCase = key.replace(/(?<=[a-z])([A-Z])(?=[a-z])/g, (each)=>`-${each.toLowerCase()}`)
+                        const kebabCase = key.replace(/[a-z]([A-Z])(?=[a-z])/g, (each)=>`${each[0]}-${each.slice(1).toLowerCase()}`)
                         element.setAttribute(kebabCase, joinedWithoutCommas)
                     } else {
                         element.setAttribute(key.toLowerCase(), joinedWithoutCommas)
