@@ -1,6 +1,6 @@
 {
   "name": "elementalist",
-  "version": "0.0.15",
+  "version": "0.5.17",
   "description": "Control the elements using JS",
   "main": "main/main.js",
   "scripts": {
