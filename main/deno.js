@@ -4,6 +4,22 @@ const xhtm = o
 
 const kebabCase = (string)=>string.replace(/[a-z]([A-Z])(?=[a-z])/g, (each)=>`${each[0]}-${each.slice(1).toLowerCase()}`)
 const isConstructor = (obj)=>!!obj.prototype && !!obj.prototype.constructor.name
+const attachProperties = (source, target)=> {
+    // attach all the static attributes
+    const attributes = Object.getOwnPropertyDescriptors(source)
+    const propertiesDefition = {}
+    for (const [key, value] of Object.entries(attributes)) {
+        // skip the special keys
+        if (['constructor', 'prototype','length',].includes(key)) {
+            continue
+        }
+        propertiesDefition[key] = {
+            get: ()=>ElementalClass[key],
+        }
+    }
+    Object.defineProperties(target, propertiesDefition)
+    return target
+}
 
 class ElementalClass {
     constructor(components={}, options={}) {
@@ -47,8 +63,12 @@ class ElementalClass {
         return element
     }
     static css = function(first, ...args) {
+        if (typeof first == 'string') {
+            return first
+        } else if (first == null) {
+            return ""
         // templated string
-        if (first instanceof Array) {
+        } else if (first instanceof Array) {
             const strings = first
             const values = args
             let finalString = ""
@@ -75,6 +95,31 @@ class ElementalClass {
         } else {
             return first
         }
+    }
+    static combineClasses = (...classes) => {
+        classes = classes.filter(each=>each!=null)
+        let classesFinalList = []
+        for (let eachEntry of classes) {
+            // handle strings
+            if (typeof eachEntry == 'string') {
+                eachEntry = eachEntry.split(" ")
+            }
+            // handle lists
+            if (eachEntry instanceof Array) {
+                eachEntry = eachEntry.flat(Infinity)
+                for (let eachName of eachEntry) {
+                    classesFinalList.push(eachName)
+                }
+            // handle objects
+            } else if (eachEntry instanceof Object) {
+                for (const [className, enabled] of Object.entries(eachEntry)) {
+                    if (enabled) {
+                        classesFinalList.push(className)
+                    }
+                }
+            }
+        }
+        return classesFinalList
     }
 
     createElement(...args) {
@@ -182,36 +227,12 @@ class ElementalClass {
 export const Elemental = (...args) => {
     const elementalObject = new ElementalClass(...args)
     const createElementFunction = elementalObject.createElement.bind(elementalObject)
-
-    let propertiesDefition = {}
-
-    // attach all the static attributes
-    const staticAttibutes = Object.getOwnPropertyDescriptors(ElementalClass)
-    for (const [key, value] of Object.entries(staticAttibutes)) {
-        // skip the special keys
-        if (['prototype','length',].includes(key)) {
-            continue
-        }
-        propertiesDefition[key] = {
-            get: ()=>ElementalClass[key],
-        }
-    }
-
-    // attach all the normal attributes
-    const normalAttributes = Object.getOwnPropertyDescriptors(Object.getPrototypeOf(elementalObject))
-    for (const [key, value] of Object.entries(normalAttributes)) {
-        // skip the special keys
-        if (key != 'constructor') {
-            continue
-        }
-        propertiesDefition[key] = {
-            get: ()=>elementalObject[key],
-        }
-    }
-    
-    Object.defineProperties(createElementFunction, propertiesDefition)
+    // attach static and normal attributes
+    attachProperties(ElementalClass, createElementFunction)
+    attachProperties(Object.getPrototypeOf(elementalObject), createElementFunction)
     return createElementFunction
 }
+attachProperties(ElementalClass, Elemental)
 
 function defaultErrorComponentFactory({children, ...properties}, key, error) {
     const element = document.createElement("div")
@@ -221,16 +242,18 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
     // 
     // error body
     // 
-    element.style.all = "unset"
-    element.style.display = "flex"
-    element.style.flexDirection = "column"
-    element.style.padding = "1.5rem"
-    element.style.backgroundColor = "#f5a5a8"
-    element.style.color = "white"
-    element.style.fontFamily = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif'
-    element.style.fontSize = '18px'
-    element.style.fontWeight = '400'
-    element.style.overflow = 'auto'
+    element.setAttribute('style', `
+        all:              unset;
+        display:          flex;
+        flex-direction:   column;
+        padding:          1.5rem;
+        background-color: #f5a5a8;
+        color:            white;
+        font-family:      -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+        font-size:        18px;
+        font-weight:      400;
+        overflow:         auto;
+    `)
     element.innerHTML = `I'm sorry, there was an error when loading this part of the page 🙁 `
     
     // 
@@ -255,29 +278,25 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
         }
     }
     errorDetails.innerHTML = `tag: ${errorElementPart}\nproperties: ${JSON.stringify(errorJsonObject,0,4)}\nerror: ${error}`
-    errorDetails.style.padding = "1rem"
-    errorDetails.style.backgroundColor = "#161b22"
-    errorDetails.style.color = "#789896"
-    errorDetails.style.whiteSpace = "pre"
-    errorDetails.style.maxWidth = "85vw"
-    errorDetails.style.overflow = "auto"
+    errorDetails.setAttribute('style', `
+        padding: 1rem;
+        background-color: #161b22;
+        color: #789896;
+        white-space: pre;
+        max-width: 85vw;
+        overflow: auto;
+    `)
     element.appendChild(errorDetails)
     // 
     // children
     // 
-    childContainer.style.all = "unset"
-    childContainer.style.display = "flex"
-    childContainer.style.flexDirection = "column"
-    childContainer.style.marginTop = "1.3rem"
-    if (children instanceof Array) {
-        for (const [key, value] of Object.entries(children)) {
-            if (typeof each == 'string') {
-                childContainer.appendChild(new window.Text(value))
-            } else if (value instanceof Node) {
-                childContainer.appendChild(value)
-            }
-        }
-    }
+    childContainer.setAttribute('style', `
+        all: unset
+        display: flex
+        flex-direction: column
+        margin-top: 1.3rem
+    `)
+    ElementalClass.appendChildren(childContainer, children)
     element.appendChild(childContainer)
     return element
 }
