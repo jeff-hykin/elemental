@@ -5,7 +5,7 @@ const xhtm = o
 const ElementalSymbol = Symbol.for("Elemental")
 export class ElementalClass {
     constructor(components={}, options={}) {
-        const {middleware, errorComponentFactory} = options
+        const {middleware, errorComponentFactory} = options||{}
         this.components = components||{}
         this.middleware = middleware||{}
         this.errorComponentFactory = errorComponentFactory||defaultErrorComponentFactory
