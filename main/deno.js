@@ -101,10 +101,10 @@ export const Elemental = (...args) => {
     const originalThing = (...localArgs)=>{
         // template call
         if (localArgs[0] instanceof Array) {
-            elementalObject.html(...localArgs)
+            return elementalObject.html(...localArgs)
         // jsx call
         } else {
-            elementalObject.createElement(...localArgs)
+            return elementalObject.createElement(...localArgs)
         }
     }
     const proxyObject = new Proxy(originalThing, {
