@@ -34,6 +34,7 @@ class ElementalClass {
     static debug = false
     static allTags = Symbol.for("allTags")
     static exclusivelySvgElements = new Set(["svg", "animate", "animateMotion", "animateTransform", "circle", "clipPath", "defs", "desc", "discard", "ellipse", "feBlend", "feColorMatrix", "feComponentTransfer", "feComposite", "feConvolveMatrix", "feDiffuseLighting", "feDisplacementMap", "feDistantLight", "feDropShadow", "feFlood", "feFuncA", "feFuncB", "feFuncG", "feFuncR", "feGaussianBlur", "feImage", "feMerge", "feMergeNode", "feMorphology", "feOffset", "fePointLight", "feSpecularLighting", "feSpotLight", "feTile", "feTurbulence", "filter", "foreignObject", "g", "hatch", "hatchpath", "image", "line", "linearGradient", "marker", "mask", "mesh", "meshgradient", "meshpatch", "meshrow", "metadata", "mpath", "path", "pattern", "polygon", "polyline", "radialGradient", "rect", "set", "stop", "switch", "symbol", "text", "textPath", "tspan", "unknown", "use", "view",])
+    static randomId = (name)=>`${name}${Math.random()}`.replace(".","")
     static appendChildren = function(element, ...children) {
         for (const each of children) {
             if (typeof each == 'string') {
@@ -193,10 +194,14 @@ class ElementalClass {
                         if (value instanceof Array) {
                             value = value.join(" ")
                         }
-                        const attributeName = (isSvg ? kebabCase(key) : key.toLowerCase())
-                        console.debug(`attributeName is:`,attributeName)
-                        console.debug(`value is:`, value)
-                        element.setAttribute(attributeName,value,)
+                        
+                        // callbacks need to be attached
+                        if (key.slice(0,2) == 'on' && value instanceof Function) {
+                            element.addEventListener(key.slice(2).toLowerCase(), value)
+                        } else {
+                            const attributeName = isSvg ? kebabCase(key) : key
+                            element.setAttribute(attributeName,value,)
+                        }
                     } catch (error) {
                         try {
                             element[key] = value
@@ -315,6 +320,7 @@ try {
     
 }
 
+export const combineClasses = ElementalClass.combineClasses
 export const html = Elemental()
 export const css = ElementalClass.css
 export const allTags = ElementalClass.allTags
@@ -323,4 +329,5 @@ export default {
     html,
     css,
     allTags,
+    combineClasses,
 }
