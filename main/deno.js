@@ -97,7 +97,16 @@ export class ElementalClass {
 // 
 const proxySymbol = Symbol.for('Proxy')
 export const Elemental = (...args) => {
-    const originalThing = (new ElementalClass(...args)).html
+    const elementalObject = new ElementalClass(...args)
+    const originalThing = (...localArgs)=>{
+        // template call
+        if (localArgs[0] instanceof Array) {
+            elementalObject.html(...localArgs)
+        // jsx call
+        } else {
+            elementalObject.createElement(...localArgs)
+        }
+    }
     const proxyObject = new Proxy(originalThing, {
         // Object.keys
         ownKeys(original) { return Reflect.ownKeys(original[ElementalSymbol]) },
