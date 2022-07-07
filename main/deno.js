@@ -46,11 +46,41 @@ class ElementalClass {
         }
         return element
     }
+    static css = function(first, ...args) {
+        // templated string
+        if (first instanceof Array) {
+            const strings = first
+            const values = args
+            let finalString = ""
+            for (const each of strings) {
+                finalString += each
+                if (values.length > 0) {
+                    if (value instanceof Object) {
+                        // recursion but always a depth of only +1 from this point
+                        finalString += Elemental.css(value)
+                    } else {
+                        finalString += `${values.shift()}`
+                    }
+                }
+            }
+            return finalString
+        } else if (first instanceof Object) {
+            let finalString = ""
+            for (const [key, value] of Object.entries(first)) {
+                if (value != null) {
+                    finalString += `${kebabCase(key)}: ${value};`
+                }
+            }
+            return finalString
+        } else {
+            return first
+        }
+    }
 
     createElement(...args) {
         // template call
         if (args[0] instanceof Array) {
-            return this.html(...args)
+            return this.xhtm(...args)
         // jsx call
         } else {
             ElementalClass.debug && console.debug(`args is:`,args)
@@ -93,7 +123,7 @@ class ElementalClass {
             const isSvg = ElementalClass.exclusivelySvgElements.has(key)
             const element = isSvg ? document.createElementNS('http://www.w3.org/2000/svg', key) : document.createElement(key)
             if (properties instanceof Object) {
-                for (const [key, value] of Object.entries(properties)) {
+                for (let [key, value] of Object.entries(properties)) {
                     // special case for class
                     if (key ==  'class') {
                         if (value instanceof Array) {
@@ -108,16 +138,20 @@ class ElementalClass {
                             value = newValue
                         }
                     }
+                    
+                    // convert objects to css strings
+                    if (key == 'style') {
+                        value = ElementalClass.css(value)
+                    }
 
                     try {
-                        let joinedWithoutCommas = value
                         if (value instanceof Array) {
-                            joinedWithoutCommas = value.join(" ")
+                            value = value.join(" ")
                         }
-                        element.setAttribute(
-                            (isSvg ? kebabCase(key) : key.toLowerCase()),
-                            joinedWithoutCommas,
-                        )
+                        const attributeName = (isSvg ? kebabCase(key) : key.toLowerCase())
+                        console.debug(`attributeName is:`,attributeName)
+                        console.debug(`value is:`, value)
+                        element.setAttribute(attributeName,value,)
                     } catch (error) {
                         try {
                             element[key] = value
