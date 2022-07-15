@@ -3,7 +3,7 @@
 For VS Code use [this extension](https://marketplace.visualstudio.com/items?itemName=pushqrdx.inline-html) to get syntax highlighting.
 
 ```js
-var { html } = await import("https://raw.githubusercontent.com/jeff-hykin/elemental/2cffaa2ad550fb637f501abde0746b9a29d99174/main/deno.js")
+var { html } = await import("https://deno.land/x/elementalist@0.5.19/main/deno.js?code")
 
 // create a custom component
 const myAsyncCustomComponent = async ({ style, children, ...props }) => {
