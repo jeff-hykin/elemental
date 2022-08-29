@@ -20,7 +20,7 @@ const attachProperties = (source, target)=> {
             continue
         }
         propertiesDefition[key] = {
-            get: ()=>target[key],
+            get: ()=>source[key],
         }
     }
     Object.defineProperties(target, propertiesDefition)
