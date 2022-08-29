@@ -223,7 +223,7 @@ class ElementalClass {
                     // direct html attributes
                     // 
                     if (value != null && !(value instanceof Object) && validNonCallbackHtmlAttributes.has(key)) {
-                        element.setAttribute(attributeName, value)
+                        element.setAttribute(key, value)
                     }
 
                     // 
