@@ -20,7 +20,7 @@ const attachProperties = (source, target)=> {
             continue
         }
         propertiesDefition[key] = {
-            get: ()=>ElementalClass[key],
+            get: ()=>target[key],
         }
     }
     Object.defineProperties(target, propertiesDefition)
@@ -279,7 +279,7 @@ export const Elemental = (...args) => {
     window.createElementFunction = createElementFunction
     attachProperties(ElementalClass, createElementFunction)
     console.debug(`createElementFunction.extend is:`,createElementFunction.extend)
-    attachProperties(Object.getPrototypeOf(elementalObject), createElementFunction)
+    attachProperties(elementalObject, createElementFunction)
     return createElementFunction
 }
 attachProperties(ElementalClass, Elemental)
