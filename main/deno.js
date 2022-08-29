@@ -11,8 +11,6 @@ const isConstructor = (obj)=>!!obj.prototype && !!obj.prototype.constructor.name
 const attachProperties = (source, target)=> {
     // attach all the static attributes
     const attributes = allKeyDescriptions(source)
-    console.debug(`source is:`,source)
-    console.debug(`attributes is:`,attributes)
     const propertiesDefition = {}
     for (const [key, value] of Object.entries(attributes)) {
         // skip the special keys
@@ -274,11 +272,7 @@ export const Elemental = (...args) => {
     const elementalObject = new ElementalClass(...args)
     const createElementFunction = elementalObject.createElement.bind(elementalObject)
     // attach static and normal attributes
-    window.ElementalClass = ElementalClass
-    window.elementalObject = elementalObject
-    window.createElementFunction = createElementFunction
     attachProperties(ElementalClass, createElementFunction)
-    console.debug(`createElementFunction.extend is:`,createElementFunction.extend)
     attachProperties(elementalObject, createElementFunction)
     return createElementFunction
 }
