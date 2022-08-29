@@ -272,6 +272,7 @@ export const Elemental = (...args) => {
     const createElementFunction = elementalObject.createElement.bind(elementalObject)
     // attach static and normal attributes
     attachProperties(ElementalClass, createElementFunction)
+    console.debug(`createElementFunction.extend is:`,createElementFunction.extend)
     attachProperties(Object.getPrototypeOf(elementalObject), createElementFunction)
     return createElementFunction
 }
