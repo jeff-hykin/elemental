@@ -80,11 +80,12 @@ class ElementalClass {
             for (const each of strings) {
                 finalString += each
                 if (values.length > 0) {
+                    const value = values.shift()
                     if (value instanceof Object) {
                         // recursion but always a depth of only +1 from this point
                         finalString += Elemental.css(value)
                     } else {
-                        finalString += `${values.shift()}`
+                        finalString += `${value}`
                     }
                 }
             }
