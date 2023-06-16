@@ -1,8 +1,9 @@
-# Try this library in the Browser Console on [Deno.land]([https://deno.land/](https://deno.land/x/elementalist@0.5.29))!
+# Try this library in the Browser Console on [Deno.land](https://deno.land/x/elementalist)!
 
 For VS Code use [this extension](https://marketplace.visualstudio.com/items?itemName=pushqrdx.inline-html) to get syntax highlighting.
 
-```js
+```jsx
+/** @jsx h */
 var { html } = await import("https://deno.land/x/elementalist@0.5.29/main/deno.js?code")
 
 // create a custom component
