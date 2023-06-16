@@ -1,4 +1,4 @@
-# Try this library in the Browser Console on [Deno.land](https://deno.land/)!
+# Try this library in the Browser Console on [Deno.land]([https://deno.land/](https://deno.land/x/elementalist@0.5.29))!
 
 For VS Code use [this extension](https://marketplace.visualstudio.com/items?itemName=pushqrdx.inline-html) to get syntax highlighting.
 
