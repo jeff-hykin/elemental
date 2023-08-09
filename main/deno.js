@@ -1,8 +1,152 @@
-import { allKeys, ownKeyDescriptions, allKeyDescriptions, } from 'https://deno.land/x/good@0.5.20/value.js'
+import { allKeyDescriptions, } from 'https://deno.land/x/good@0.7.8/value.js'
 // minimized xhtm from: https://github.com/dy/xhtm
-var e="",t="";function o(r){var p,a,l,s,c=arguments,i=this,n=0,d=[],h=0,u=[],f=0;d.root=!0;var g=function(e,o,r){void 0===o&&(o=[]);var p=0;return(e=r||e!==t?e.replace(/\ue001/g,e=>u[f++]):u[f++].slice(1,-1))?(e.replace(/\ue000/g,(t,r)=>(r&&o.push(e.slice(p,r)),p=r+1,o.push(c[++h]))),p<e.length&&o.push(e.slice(p)),o.length>1?o:o[0]):e},m=()=>{[d,s,...p]=d,d.push(i(s,...p))};return r.join(e).replace(/<!--[^]*-->/g,"").replace(/<!\[CDATA\[[^]*\]\]>/g,"").replace(/('|")[^\1]*?\1/g,e=>(u.push(e),t)).replace(/\s+/g," ").replace(/(?:^|>)([^<]*)(?:$|<)/g,(e,t,r,p)=>{var c,i;if(r&&p.slice(n,r).replace(/(\S)\/$/,"$1 /").split(" ").map((e,t)=>{if("/"===e[0])c=i||e.slice(1)||1;else if(t){if(e){var r=d[2]||(d[2]={});"..."===e.slice(0,3)?Object.assign(r,arguments[++h]):([a,l]=e.split("="),r[g(a)]=!l||g(l))}}else{for(i=g(e);o.close[d[1]+i];)m();d=[d,i,null],o.empty[i]&&(c=i)}}),c)for(m();s!==c&&o.close[s];)m();n=r+e.length,t&&" "!==t&&g((s=0,t),d,!0)}),d.root||m(),d.length>1?d:d[0]}o.empty={},o.close={},"area base br col command embed hr img input keygen link meta param source track wbr ! !doctype ? ?xml".split(" ").map(e=>o.empty[e]=o.empty[e.toUpperCase()]=!0);var r={li:"",dt:"dd",dd:"dt",p:"address article aside blockquote details div dl fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 header hgroup hr main menu nav ol pre section table",rt:"rp",rp:"rt",optgroup:"",option:"optgroup",caption:"tbody thead tfoot tr colgroup",colgroup:"thead tbody tfoot tr caption",thead:"tbody tfoot caption",tbody:"tfoot caption",tfoot:"caption",tr:"tbody tfoot",td:"th tr",th:"td tr tbody"},p=function(e){[...r[e].split(" "),e].map(t=>{o.close[e]=o.close[e.toUpperCase()]=o.close[e+t]=o.close[e.toUpperCase()+t]=o.close[e+t.toUpperCase()]=o.close[e.toUpperCase()+t.toUpperCase()]=!0})};for(var a in r)p(a);
-const xhtm = o
+    const FIELD = '\ue000', QUOTES = '\ue001'
 
+    function htm (statics) {
+    let h = this, prev = 0, current = [null], field = 0, args, name, value, quotes = [], quote = 0, last, level = 0, pre = false
+
+    const evaluate = (str, parts = [], raw) => {
+        let i = 0
+        str = (!raw && str === QUOTES ?
+        quotes[quote++].slice(1,-1) :
+        str.replace(/\ue001/g, m => quotes[quote++]))
+
+        if (!str) return str
+        str.replace(/\ue000/g, (match, idx) => {
+        if (idx) parts.push(str.slice(i, idx))
+        i = idx + 1
+        return parts.push(arguments[++field])
+        })
+        if (i < str.length) parts.push(str.slice(i))
+        return parts.length > 1 ? parts : parts[0]
+    }
+
+    // close level
+    const up = () => {
+        // console.log('-level', current);
+        [current, last, ...args] = current
+        current.push(h(last, ...args))
+        if (pre === level--) pre = false // reset <pre>
+    }
+
+    let str = statics
+        .join(FIELD)
+        .replace(/<!--[^]*?-->/g, '')
+        .replace(/<!\[CDATA\[[^]*\]\]>/g, '')
+        .replace(/('|")[^\1]*?\1/g, match => (quotes.push(match), QUOTES))
+
+        // ...>text<... sequence
+    str.replace(/(?:^|>)((?:[^<]|<[^\w\ue000\/?!>])*)(?:$|<)/g, (match, text, idx, str) => {
+        let tag, close
+
+        if (idx) {
+        str.slice(prev, idx)
+            // <abc/> → <abc />
+            .replace(/(\S)\/$/, '$1 /')
+            .split(/\s+/)
+            .map((part, i) => {
+            // </tag>, </> .../>
+            if (part[0] === '/') {
+                part = part.slice(1)
+                // ignore duplicate empty closers </input>
+                if (EMPTY[part]) return
+                // ignore pairing self-closing tags
+                close = tag || part || 1
+                // skip </input>
+            }
+            // <tag
+            else if (!i) {
+                tag = evaluate(part)
+                // <p>abc<p>def, <tr><td>x<tr>
+                if (typeof tag === 'string') { tag = tag.toLowerCase(); while (CLOSE[current[1]+tag]) up() }
+                current = [current, tag, null]
+                level++
+                if (!pre && PRE[tag]) pre = level
+                // console.log('+level', tag)
+                if (EMPTY[tag]) close = tag
+            }
+            // attr=...
+            else if (part) {
+                let props = current[2] || (current[2] = {})
+                if (part.slice(0, 3) === '...') {
+                Object.assign(props, arguments[++field])
+                }
+                else {
+                [name, value] = part.split('=');
+                Array.isArray(value = props[evaluate(name)] = value ? evaluate(value) : true) &&
+                // if prop value is array - make sure it serializes as string without csv
+                (value.toString = value.join.bind(value, ''))
+                }
+            }
+            })
+        }
+
+        if (close) {
+        if (!current[0]) err(`Wrong close tag \`${close}\``)
+        up()
+        // if last child is optionally closable - close it too
+        while (last !== close && CLOSE[last]) up()
+        }
+        prev = idx + match.length
+
+        // fix text indentation
+        if (!pre) text = text.replace(/\s*\n\s*/g,'').replace(/\s+/g, ' ')
+
+        if (text) evaluate((last = 0, text), current, true)
+    })
+
+    if (current[0] && CLOSE[current[1]]) up()
+
+    if (level) err(`Unclosed \`${current[1]}\`.`)
+
+    return current.length < 3 ? current[1] : (current.shift(), current)
+    }
+
+    const err = (msg) => { throw SyntaxError(msg) }
+
+    // self-closing elements
+    const EMPTY = htm.empty = {}
+
+    // optional closing elements
+    const CLOSE = htm.close = {}
+
+    // preformatted text elements
+    const PRE = htm.pre = {}
+
+    // https://github.com/wooorm/html-void-elements/blob/main/index.js
+    'area base basefont bgsound br col command embed frame hr image img input keygen link meta param source track wbr ! !doctype ? ?xml'.split(' ').map(v => htm.empty[v] = true)
+
+    // https://html.spec.whatwg.org/multipage/syntax.html#optional-tags
+    // closed by the corresponding tag or end of parent content
+    let close = {
+    'li': '',
+    'dt': 'dd',
+    'dd': 'dt',
+    'p': 'address article aside blockquote details div dl fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 header hgroup hr main menu nav ol pre section table',
+    'rt': 'rp',
+    'rp': 'rt',
+    'optgroup': '',
+    'option': 'optgroup',
+    'caption': 'tbody thead tfoot tr colgroup',
+    'colgroup': 'thead tbody tfoot tr caption',
+    'thead': 'tbody tfoot caption',
+    'tbody': 'tfoot caption',
+    'tfoot': 'caption',
+    'tr': 'tbody tfoot',
+    'td': 'th tr',
+    'th': 'td tr tbody',
+    }
+    for (let tag in close) {
+    for (let closer of [...close[tag].split(' '), tag])
+        htm.close[tag] = htm.close[tag + closer] = true
+    }
+
+    'pre textarea'.split(' ').map(v => htm.pre[v] = true)
+    const xhtm = htm
+
+// 
+// actual elemental
+// 
 const validStyleAttribute = Object.freeze(new Set(["accent-color","align-content","align-items","align-self","align-tracks","all","animation","animation-delay","animation-direction","animation-duration","animation-fill-mode","animation-iteration-count","animation-name","animation-play-state","animation-timeline","animation-timing-function","appearance","ascent-override","aspect-ratio","backdrop-filter","backface-visibility","background","background-attachment","background-blend-mode","background-clip","background-color","background-image","background-origin","background-position","background-position-x","background-position-y","background-repeat","background-size","bleed","block-overflow","block-size","border","border-block","border-block-color","border-block-end","border-block-end-color","border-block-end-style","border-block-end-width","border-block-start","border-block-start-color","border-block-start-style","border-block-start-width","border-block-style","border-block-width","border-bottom","border-bottom-color","border-bottom-left-radius","border-bottom-right-radius","border-bottom-style","border-bottom-width","border-collapse","border-color","border-end-end-radius","border-end-start-radius","border-image","border-image-outset","border-image-repeat","border-image-slice","border-image-source","border-image-width","border-inline","border-inline-color","border-inline-end","border-inline-end-color","border-inline-end-style","border-inline-end-width","border-inline-start","border-inline-start-color","border-inline-start-style","border-inline-start-width","border-inline-style","border-inline-width","border-left","border-left-color","border-left-style","border-left-width","border-radius","border-right","border-right-color","border-right-style","border-right-width","border-spacing","border-start-end-radius","border-start-start-radius","border-style","border-top","border-top-color","border-top-left-radius","border-top-right-radius","border-top-style","border-top-width","border-width","bottom","box-decoration-break","box-shadow","box-sizing","break-after","break-before","break-inside","caption-side","caret-color","clear","clip","clip-path","color","color-scheme","column-count","column-fill","column-gap","column-rule","column-rule-color","column-rule-style","column-rule-width","column-span","column-width","columns","contain","content","content-visibility","counter-increment","counter-reset","counter-set","cursor","length","angle","descent-override","direction","display","resolution","empty-cells","fallback","filter","flex","flex-basis","flex-direction","flex-flow","flex-grow","flex-shrink","flex-wrap","flex_value","float","font","font-display","font-family","font-feature-settings","font-kerning","font-language-override","font-optical-sizing","font-size","font-size-adjust","font-stretch","font-style","font-synthesis","font-variant","font-variant-alternates","font-variant-caps","font-variant-east-asian","font-variant-ligatures","font-variant-numeric","font-variant-position","font-variation-settings","font-weight","forced-color-adjust","gap","grid","grid-area","grid-auto-columns","grid-auto-flow","grid-auto-rows","grid-column","grid-column-end","grid-column-start","grid-row","grid-row-end","grid-row-start","grid-template","grid-template-areas","grid-template-columns","grid-template-rows","frequency","hanging-punctuation","height","hyphenate-character","hyphens","image-orientation","image-rendering","image-resolution","inherit","inherits","initial","initial-letter","initial-letter-align","initial-value","inline-size","input-security","inset","inset-block","inset-block-end","inset-block-start","inset-inline","inset-inline-end","inset-inline-start","isolation","justify-content","justify-items","justify-self","justify-tracks","left","letter-spacing","line-break","line-clamp","line-gap-override","line-height","line-height-step","list-style","list-style-image","list-style-position","list-style-type","margin","margin-block","margin-block-end","margin-block-start","margin-bottom","margin-inline","margin-inline-end","margin-inline-start","margin-left","margin-right","margin-top","margin-trim","marks","mask","mask-border","mask-border-mode","mask-border-outset","mask-border-repeat","mask-border-slice","mask-border-source","mask-border-width","mask-clip","mask-composite","mask-image","mask-mode","mask-origin","mask-position","mask-repeat","mask-size","mask-type","masonry-auto-flow","math-style","max-block-size","max-height","max-inline-size","max-lines","max-width","max-zoom","min-block-size","min-height","min-inline-size","min-width","min-zoom","mix-blend-mode","time","negative","object-fit","object-position","offset","offset-anchor","offset-distance","offset-path","offset-position","offset-rotate","opacity","order","orientation","orphans","outline","outline-color","outline-offset","outline-style","outline-width","overflow","overflow-anchor","overflow-block","overflow-clip-margin","overflow-inline","overflow-wrap","overflow-x","overflow-y","overscroll-behavior","overscroll-behavior-block","overscroll-behavior-inline","overscroll-behavior-x","overscroll-behavior-y","Pseudo-classes","Pseudo-elements","pad","padding","padding-block","padding-block-end","padding-block-start","padding-bottom","padding-inline","padding-inline-end","padding-inline-start","padding-left","padding-right","padding-top","page-break-after","page-break-before","page-break-inside","paint-order","perspective","perspective-origin","place-content","place-items","place-self","pointer-events","position","prefix","print-color-adjust","quotes","range","resize","revert","right","rotate","row-gap","ruby-align","ruby-merge","ruby-position","scale","scroll-behavior","scroll-margin","scroll-margin-block","scroll-margin-block-end","scroll-margin-block-start","scroll-margin-bottom","scroll-margin-inline","scroll-margin-inline-end","scroll-margin-inline-start","scroll-margin-left","scroll-margin-right","scroll-margin-top","scroll-padding","scroll-padding-block","scroll-padding-block-end","scroll-padding-block-start","scroll-padding-bottom","scroll-padding-inline","scroll-padding-inline-end","scroll-padding-inline-start","scroll-padding-left","scroll-padding-right","scroll-padding-top","scroll-snap-align","scroll-snap-stop","scroll-snap-type","scrollbar-color","scrollbar-gutter","scrollbar-width","shape-image-threshold","shape-margin","shape-outside","size","size-adjust","speak-as","src","suffix","symbols","syntax","system","tab-size","table-layout","text-align","text-align-last","text-combine-upright","text-decoration","text-decoration-color","text-decoration-line","text-decoration-skip","text-decoration-skip-ink","text-decoration-style","text-decoration-thickness","text-emphasis","text-emphasis-color","text-emphasis-position","text-emphasis-style","text-indent","text-justify","text-orientation","text-overflow","text-rendering","text-shadow","text-size-adjust","text-transform","text-underline-offset","text-underline-position","top","touch-action","transform","transform-box","transform-origin","transform-style","transition","transition-delay","transition-duration","transition-property","transition-timing-function","translate","unicode-bidi","unicode-range","unset","user-select","user-zoom","vertical-align","viewport-fit","visibility","white-space","widows","width","will-change","word-break","word-spacing","word-wrap","writing-mode","z-index","zoom"]))
 const validNonCallbackHtmlAttributes = Object.freeze(new Set([ "class", "style", "value", "id", "contenteditable", "href", "hidden", "autofocus", "src", "name", "accept", "accesskey", "action", "align", "alt", "async", "autocomplete", "autoplay", "border", "charset", "checked", "cite", "cols", "colspan", "content", "controls", "coords", "data", "datetime", "default", "defer", "dir", "dirname", "disabled", "download", "draggable", "enctype", "for", "form", "formaction", "headers", "high", "hreflang", "http", "ismap", "kind", "label", "lang", "list", "loop", "low", "max", "maxlength", "media", "method", "min", "multiple", "muted", "novalidate", "open", "optimum", "pattern", "placeholder", "poster", "preload", "readonly", "rel", "required", "reversed", "rows", "rowspan", "sandbox", "scope", "selected", "shape", "size", "sizes", "span", "spellcheck", "srcdoc", "srclang", "srcset", "start", "step", "tabindex", "target", "title", "translate", "type", "usemap", "wrap", "bgcolor", "width", "color", "height", ]))
 const isValidStyleAttribute = (key)=>key.startsWith('-')||validStyleAttribute.has(key)
