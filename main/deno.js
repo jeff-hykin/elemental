@@ -1,3 +1,4 @@
+import { toString } from "https://deno.land/x/good@1.4.4.3/string.js"
 import { allKeyDescriptions, } from 'https://deno.land/x/good@0.7.8/value.js'
     // minimized xhtm from: https://github.com/dy/xhtm
     const FIELD = "\ue000",
@@ -181,11 +182,13 @@ const attachProperties = (source, target)=> {
     return target
 }
 
+export const toHtmlElement = Symbol.for("toHtmlElement")
 class ElementalClass {
     constructor(components={}, options={}) {
-        const {middleware, errorComponentFactory} = options||{}
+        const {middleware, errorComponentFactory, defaultPlaceholderFactory} = options||{}
         this.components = components||{}
         this.middleware = middleware||{}
+        this.defaultPlaceholderFactory = defaultPlaceholderFactory||(()=>document.createElement("div"))
         this.errorComponentFactory = errorComponentFactory||defaultErrorComponentFactory
         this.html = this.createElement // alias
         this.xhtm = xhtm.bind((...args)=>this.createElement(...args)) // bind is "when xhtm is done parsing, how should the element be handed" callback
@@ -195,30 +198,86 @@ class ElementalClass {
     static allTags = Symbol.for("allTags")
     static exclusivelySvgElements = new Set(["svg", "animate", "animateMotion", "animateTransform", "circle", "clipPath", "defs", "desc", "discard", "ellipse", "feBlend", "feColorMatrix", "feComponentTransfer", "feComposite", "feConvolveMatrix", "feDiffuseLighting", "feDisplacementMap", "feDistantLight", "feDropShadow", "feFlood", "feFuncA", "feFuncB", "feFuncG", "feFuncR", "feGaussianBlur", "feImage", "feMerge", "feMergeNode", "feMorphology", "feOffset", "fePointLight", "feSpecularLighting", "feSpotLight", "feTile", "feTurbulence", "filter", "foreignObject", "g", "hatch", "hatchpath", "image", "line", "linearGradient", "marker", "mask", "mesh", "meshgradient", "meshpatch", "meshrow", "metadata", "mpath", "path", "pattern", "polygon", "polyline", "radialGradient", "rect", "set", "stop", "switch", "symbol", "text", "textPath", "tspan", "unknown", "use", "view",])
     static randomId = (name)=>`${name}${Math.random()}`.replace(".","")
+    static makeHtmlElement = function(element) {
+        if (element instanceof Node || element instanceof Element || element instanceof HTMLDocument) {
+            return element
+        // coerce when possible
+        } else {
+            if (element == null) {
+                return new window.Text("")
+            } else if (typeof element == 'string') {
+                return new window.Text(element)
+            } else if (typeof element == 'symbol') {
+                // symbols throw errors for: `${symbol}`
+                return new window.Text(element.toString())
+            } else if (!(element instanceof Object)) {
+                return new window.Text(`${element}`)
+            } else if (element[toHtmlElement] != null) {
+                return ElementalClass.makeHtmlElement(element[toHtmlElement])
+            } else {
+                throw Error(`Cannot coerce ${element} into an html element`)
+            }
+        }
+    }
     static appendChildren = function(element, ...children) {
+        const { element: altElement, insertBefore } = element
+        let primitiveAppend = (child)=>element.appendChild(child)
+        if (insertBefore && !(insertBefore instanceof Function)) {
+            element = altElement
+            primitiveAppend = (child)=>element.insertBefore(insertBefore, child)
+        }
         for (const each of children) {
-            if (typeof each == 'string') {
-                element.appendChild(new window.Text(each))
-            } else if (each == null) {
-                // empty node
-                element.appendChild(new window.Text(""))
-            } else if (!(each instanceof Object)) {
-                element.appendChild(new window.Text(`${each}`))
-            } else if (each instanceof Node) {
-                element.appendChild(each)
-            } else if (each instanceof Array) {
+            if (each instanceof Array) {
+                // effectively flattens nested arrays
                 ElementalClass.appendChildren(element, ...each)
             } else if (each instanceof Function) {
                 // recursively
                 ElementalClass.appendChildren(element, each())
             } else if (each instanceof Promise) {
                 const elementPromise = each
-                const placeholder = elementPromise.placeholder || document.createElement("div")
-                setTimeout(async () => placeholder.replaceWith(await elementPromise), 0)
-                element.appendChild(placeholder)
-            // some elements are not HTML nodes and are still valid
-            } else if (each != null && each instanceof Object) {
-                element.appendChild(each)
+                const placeholder = elementPromise.placeholder || document.createElement("div") // TODO: appendChildren needs to NOT be a static function so that this can use this.defaultPlaceholderFactory()
+                primitiveAppend(placeholder)
+                setTimeout(async () => {
+                    try {
+                        const result = await elementPromise
+                        if (!(result instanceof Array)) {
+                            const htmlElement = ElementalClass.makeHtmlElement(result)
+                            placeholder.replaceWith(htmlElement)
+                        // if array output
+                        } else {
+                            // TODO: needs a cleaner solution, but it will require a major refactor 
+                            let parentElement = placeholder.parentElement
+                            if (!parentElement) {
+                                parentElement = await new Promise((resolve, reject)=>{
+                                    let intervalId = setInterval(() => {
+                                        if (placeholder.parentElement) {
+                                            resolve(placeholder.parentElement)
+                                            clearInterval(intervalId)
+                                        }
+                                    }, 70)
+                                })
+                            }
+                            // add all the children
+                            for (const each of result) {
+                                try {
+                                    // recursive so that nested arrays of promises still work
+                                    ElementalClass.appendChildren({
+                                        element: parentElement,
+                                        insertBefore: placeholder,
+                                    }, each)
+                                } catch (error) {
+                                    parentElement.insertBefore(placeholder, createErrorElement(`When async component ${toString(element)} resolved, it created an array. One of those elements in the array caused an error when it tried to be added as a child:\n ${toString(error)}`))
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        placeholder.replaceWith(
+                            defaultErrorComponentFactory({...properties, children}, key, error)
+                        )
+                    }
+                }, 0)
+            } else {
+                primitiveAppend(ElementalClass.makeHtmlElement(each))
             }
         }
         return element
@@ -319,8 +378,46 @@ class ElementalClass {
                 // allow async components
                 if (output instanceof Promise) {
                     const elementPromise = output
-                    const placeholder = elementPromise.placeholder || document.createElement("div")
-                    setTimeout(async () => placeholder.replaceWith(await elementPromise), 0)
+                    const placeholder = elementPromise.placeholder || this.defaultPlaceholderFactory(output)
+                    setTimeout(async () =>{
+                        try {
+                            const result = await elementPromise
+                            if (!(result instanceof Array)) {
+                                const htmlElement = ElementalClass.makeHtmlElement(result)
+                                placeholder.replaceWith(htmlElement)
+                            // if array output
+                            } else {
+                                // TODO: needs a cleaner solution, but it will require a major refactor
+                                let parentElement = placeholder.parentElement
+                                if (!parentElement) {
+                                    parentElement = await new Promise((resolve, reject)=>{
+                                        let intervalId = setInterval(() => {
+                                            if (placeholder.parentElement) {
+                                                resolve(placeholder.parentElement)
+                                                clearInterval(intervalId)
+                                            }
+                                        }, 70)
+                                    })
+                                }
+                                // add all the children
+                                for (const each of result) {
+                                    try {
+                                        // recursive so that nested arrays of promises still work
+                                        ElementalClass.appendChildren({
+                                            element: parentElement,
+                                            insertBefore: placeholder,
+                                        }, each)
+                                    } catch (error) {
+                                        parentElement.insertBefore(placeholder, createErrorElement(`Something returned a promise, which resolved to an array, and then something tried to append those to an element (this element: ${element}). One of the items in the array ${each} caused an error when it tried to be added as a child:\n ${toString(error)}`))
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            placeholder.replaceWith(
+                                this.errorComponentFactory({...properties, children}, key, error)
+                            )
+                        }
+                    }, 0)
                     return placeholder
                 } else {
                     return output
@@ -435,6 +532,23 @@ export const Elemental = (...args) => {
 }
 attachProperties(ElementalClass, Elemental)
 
+function createErrorElement(error) {
+    const element = document.createElement("div")
+    element.setAttribute('style', `
+        all:              unset;
+        display:          flex;
+        flex-direction:   column;
+        padding:          1.5rem;
+        background-color: #f5a5a8;
+        color:            white;
+        font-family:      -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+        font-size:        18px;
+        font-weight:      400;
+        overflow:         auto;
+    `)
+    element.innerHTML = `I'm sorry, there was an error when loading this part of the page 🙁.<br>Here's the error message: ${ Option(toString(error!=null&&error.message||error)).innerHTML}`
+
+}
 function defaultErrorComponentFactory({children, ...properties}, key, error) {
     const element = document.createElement("div")
     const errorDetails = document.createElement("code")
