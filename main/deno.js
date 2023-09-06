@@ -69,7 +69,6 @@ import { allKeyDescriptions, } from 'https://deno.land/x/good@0.7.8/value.js'
                             tag = evaluate(part)
                             // <p>abc<p>def, <tr><td>x<tr>
                             if (typeof tag === "string") {
-                                tag = tag.toLowerCase()
                                 while (CLOSE[current[1] + tag]) up()
                             }
                             current = [current, tag, null]
