@@ -344,7 +344,7 @@ class ElementalClass {
                     // 
                     // events
                     // 
-                    if (key.slice(0,2) == 'on' && value instanceof Function) {
+                    if (key.slice(0,2) == 'on' && (key.slice(2,3).toLowerCase() !== key.slice(2,3)) && value instanceof Function) {
                         element.addEventListener(key.slice(2).toLowerCase(), value)
                     }
 
