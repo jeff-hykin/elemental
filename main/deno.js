@@ -190,7 +190,7 @@ class ElementalClass {
         this.middleware = middleware||{}
         this.defaultPlaceholderFactory = defaultPlaceholderFactory||(()=>document.createElement("div"))
         this.errorComponentFactory = errorComponentFactory||defaultErrorComponentFactory
-        this.html = this.createElement // alias
+        this.html = this.createElement.bind(this) // alias
         this.xhtm = xhtm.bind((...args)=>this.createElement(...args)) // bind is "when xhtm is done parsing, how should the element be handed" callback
     }
 
