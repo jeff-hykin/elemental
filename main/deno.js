@@ -425,7 +425,19 @@ class ElementalClass {
             }
             // create either an html element or an svg element
             const isSvg = ElementalClass.exclusivelySvgElements.has(key)
-            const element = isSvg ? document.createElementNS('http://www.w3.org/2000/svg', key) : document.createElement(key)
+            let element
+            // this if is only because of: https://stackoverflow.com/questions/821359/reload-an-iframe-without-adding-to-the-history
+            if (key == "iframe" && properties.src) {
+                // so stupid
+                const helper = document.createElement("div")
+                helper.innerHTML = `<iframe src=${JSON.stringify(properties.src)}></iframe>`
+                element = helper.children[0]
+                delete properties.src
+            } else if (isSvg) {
+                element = document.createElementNS('http://www.w3.org/2000/svg', key)
+            } else {
+                element = document.createElement(key)
+            }
             let styleString = ""
             if (properties instanceof Object) {
                 for (let [key, value] of Object.entries(properties)) {
