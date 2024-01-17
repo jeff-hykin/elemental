@@ -551,7 +551,7 @@ function createErrorElement(error) {
 }
 function defaultErrorComponentFactory({children, ...properties}, key, error) {
     const element = document.createElement("div")
-    const errorDetails = document.createElement("code")
+    const errorDetails = document.createElement("div")
     const childContainer = document.createElement("div")
     
     // 
@@ -596,10 +596,27 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
         try {
             errorJsonObject[key] = JSON.parse(JSON.stringify(value))
         } catch (error) {
-            errorJsonObject[key] = `${value}`
+            if (typeof value == 'symbol') {
+                errorJsonObject[key] = value.toString()
+            } else {
+                errorJsonObject[key] = `${value}`
+            }
         }
     }
-    errorDetails.innerHTML = `tag: ${errorElementPart}\nproperties: ${JSON.stringify(errorJsonObject,0,4)}\nerror: ${error}`
+    errorDetails.innerHTML = `
+        <span>
+            tag: ${errorElementPart}
+        </span>
+        <div>
+            properties:
+            <code style="max-height: 12rem; overflow: auto;">
+                ${JSON.stringify(errorJsonObject,0,4)}
+            </code>
+        </div>
+        <span>
+            error: ${error.stack.replace(/\n/, "<br>")}
+        </span>
+    `
     errorDetails.setAttribute('style', `
         padding: 1rem;
         background-color: #161b22;
