@@ -617,7 +617,7 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
     }
     errorDetails.innerHTML = `
         <span>
-            error: ${error.replace(/\n/, "<br>")} <br>
+            error: ${`${error}`.replace(/\n/, "<br>")} <br>
             location: ${error.stack.replace(/\n/, "<br>")}
         </span>
         <span>tag: ${document.createTextNode(errorElementPart)}
