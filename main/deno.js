@@ -1,4 +1,4 @@
-import { toString } from "https://deno.land/x/good@1.4.4.3/string.js"
+import { toString, indent } from "https://deno.land/x/good@1.4.4.3/string.js"
 import { allKeyDescriptions, } from 'https://deno.land/x/good@0.7.8/value.js'
     // minimized xhtm from: https://github.com/dy/xhtm
     const FIELD = "\ue000",
@@ -588,18 +588,18 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
     // 
     let errorElementPart
     if (typeof key == 'string') {
-        errorElementPart = `<${key} />`
+        errorElementPart = `&lt;${key} />`
     } else {
         try {
             // classes
-            errorElementPart = `<${key.prototype.constructor.name} />`
+            errorElementPart = `&lt;${key.prototype.constructor.name} />`
         } catch (error) {
             try {
                 // functions
-                errorElementPart = `<${key.name} />`
+                errorElementPart = `&lt;${key.name} />`
             } catch (error) {
                 // unknown
-                errorElementPart = `<${key} />`
+                errorElementPart = `&lt;${key} />`
             }
         }
     }
@@ -615,17 +615,8 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
             }
         }
     }
-    errorDetails.innerHTML = `
-        <span>
-            error: ${`${error}`.replace(/\n/, "<br>")} <br>
-            location: ${error.stack.replace(/\n/, "<br>")}
-        </span>
-        <span>tag: ${document.createTextNode(errorElementPart)}
-        </span>
-        <div>properties:
-            <code style="max-height: 12rem; overflow: auto;">${JSON.stringify(errorJsonObject,0,4)}</code>
-        </div>
-    `
+    
+    errorDetails.innerHTML = `<span>error: ${`${error}`.replace(/\n/, "<br>")}<br>location:<br>${indent({string:error.stack, by:"    "}).replace(/\n/, "<br>")}</span><br><span>tag: ${errorElementPart}</span><br><div>properties:<br><code style="max-height: 12rem; overflow: auto;">${JSON.stringify(errorJsonObject,0,4)}</code></div>`
     errorDetails.setAttribute('style', `
         padding: 1rem;
         background-color: #161b22;
