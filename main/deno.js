@@ -617,17 +617,14 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
     }
     errorDetails.innerHTML = `
         <span>
-            tag: ${errorElementPart}
+            error: ${error.replace(/\n/, "<br>")} <br>
+            location: ${error.stack.replace(/\n/, "<br>")}
         </span>
-        <div>
-            properties:
-            <code style="max-height: 12rem; overflow: auto;">
-                ${JSON.stringify(errorJsonObject,0,4)}
-            </code>
+        <span>tag: ${document.createTextNode(errorElementPart)}
+        </span>
+        <div>properties:
+            <code style="max-height: 12rem; overflow: auto;">${JSON.stringify(errorJsonObject,0,4)}</code>
         </div>
-        <span>
-            error: ${error.stack.replace(/\n/, "<br>")}
-        </span>
     `
     errorDetails.setAttribute('style', `
         padding: 1rem;
