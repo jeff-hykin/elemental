@@ -1,4 +1,4 @@
-import { toString, indent } from "https://deno.land/x/good@1.4.4.3/string.js"
+import { toString, indent } from "https://deno.land/x/good@1.6.1.3/string.js"
 import { allKeyDescriptions, } from 'https://deno.land/x/good@0.7.8/value.js'
     // minimized xhtm from: https://github.com/dy/xhtm
     const FIELD = "\ue000",
