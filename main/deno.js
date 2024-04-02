@@ -1,4 +1,5 @@
 import { toString, indent } from "https://deno.land/x/good@1.6.1.3/string.js"
+// import { toString, indent } from "/Users/jeffhykin/repos/good-js/source/string.js"
 import { allKeyDescriptions, } from 'https://deno.land/x/good@0.7.8/value.js'
     // minimized xhtm from: https://github.com/dy/xhtm
     const FIELD = "\ue000",
@@ -215,7 +216,11 @@ class ElementalClass {
             } else if (element[toHtmlElement] != null) {
                 return ElementalClass.makeHtmlElement(element[toHtmlElement])
             } else {
-                throw Error(`Cannot coerce ${element} into an html element`)
+                let className 
+                try {
+                    className = Object.getPrototypeOf(element).constructor.name 
+                } catch (error) {}
+                throw Error(`Cannot coerce ${className||element} into an html element\n`, element)
             }
         }
     }
