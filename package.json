@@ -1,8 +1,8 @@
 {
-  "name": "elementalist",
-  "version": "0.5.17",
+  "name": "@!!!!!/elemental",
+  "version": "0.5.40",
   "description": "Control the elements using JS",
-  "main": "main/main.js",
+  "main": "main/main.bundle.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -23,10 +23,10 @@
   },
   "homepage": "https://github.com/jeff-hykin/elemental#readme",
   "exports": {
-    "import": "./main/main.mjs",
+    "import": "./main/main.bundle.js",
     "require": "./main/main.js"
   },
-  "module": "./main/main.mjs",
+  "module": "./main/main.bundle.js",
   "devDependencies": {
     "xhtm": "^1.5.3"
   }
