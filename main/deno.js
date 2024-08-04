@@ -219,6 +219,7 @@ class ElementalClass {
                 let className 
                 try {
                     className = Object.getPrototypeOf(element).constructor.name 
+                    className = className && `class ${JSON.stringify(className)}`
                 } catch (error) {}
                 throw Error(`Cannot coerce ${className||element} into an html element\n`, element)
             }
@@ -640,7 +641,12 @@ function defaultErrorComponentFactory({children, ...properties}, key, error) {
         flex-direction: column
         margin-top: 1.3rem
     `)
-    ElementalClass.appendChildren(childContainer, children)
+    for (const each of (children||[])) {
+        try {
+            ElementalClass.appendChildren(childContainer, [each])
+        } catch (error) {
+        }
+    }
     element.appendChild(childContainer)
     return element
 }
