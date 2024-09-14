@@ -31,10 +31,8 @@ export const toRepresentation = (item, {alreadySeen=new Set()}={})=>{
         }
         
         let output
-        if (item === undefined) {
-            output = "undefined"
-        } else if (item === null) {
-            output = "null"
+        if (item == null || typeof item == 'function' || typeof item == 'number' || typeof item == 'boolean' || item instanceof RegExp) {
+            output = String(item)
         } else if (typeof item == 'string') {
             output = JSON.stringify(item)
         } else if (typeof item == 'symbol') {
@@ -55,7 +53,7 @@ export const toRepresentation = (item, {alreadySeen=new Set()}={})=>{
         } else if (item instanceof Array) {
             output = `[${item.map(each=>recursionWrapper(each)).join(",")}]`
         } else if (item instanceof Set) {
-            output = `new Set(${([...item]).map(each=>recursionWrapper(each)).join(",")})`
+            output = `new Set([${([...item]).map(each=>recursionWrapper(each)).join(",")}])`
         // pure object
         } else if (item instanceof Object && item.constructor == Object) {
             output = pureObjectRepr(item)
@@ -90,22 +88,9 @@ export const toRepresentation = (item, {alreadySeen=new Set()}={})=>{
                 } catch (error) {}
             }
             
-            // fallback on toString()
-            try {
-                output = item.toString()
-                if (output !== "[object Object]") {
-                    return output
-                }
-            } catch (error) {}
-            
-            // fallback on rendering with prototype as pure object
-            try {
-                if (item.constructor instanceof Function && item.prototype && typeof item.name == 'string') {
-                    output = `class ${item.name} { /*...*/ }`
-                    return output
-                }
-            } catch (error) {
-                
+            if (item?.constructor == Error) {
+                output = `new Error(${JSON.stringify(item.message)})`
+                return output
             }
 
             // fallback on rendering with prototype as pure object
@@ -117,8 +102,25 @@ export const toRepresentation = (item, {alreadySeen=new Set()}={})=>{
             } catch (error) {
                 
             }
+            console.log(`here4`)
             
+            // fallback on rendering with prototype as pure object
+            try {
+                if (item.constructor instanceof Function && item.prototype && typeof item.name == 'string') {
+                    output = `class ${item.name} { /*...*/ }`
+                    return output
+                }
+            } catch (error) {
+                
+            }
             
+            // fallback on toString()
+            try {
+                output = item.toString()
+                if (output !== "[object Object]") {
+                    return output
+                }
+            } catch (error) {}
             
             // absolute fallback on treating as pure item
             return pureObjectRepr(item)
@@ -136,5 +138,10 @@ export const toRepresentation = (item, {alreadySeen=new Set()}={})=>{
         string += "\n}"
         return string
     }
-    return recursionWrapper(item)
+    
+    try {
+        return recursionWrapper(item)
+    } catch (error) {
+        return String(item)
+    }
 }
