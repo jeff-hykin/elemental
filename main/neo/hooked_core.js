@@ -3,6 +3,7 @@ import allTags  from "./all_html_tags.js"
 // TODO: add Safari warning (safari doesn't support extending core elements)
 
 // create hooked versions of all builtin html tags
+export const isHooked = Symbol("isHooked")
 const html = {}
 for (const eachTag of allTags) {
     // doesn't work for some reason
@@ -18,6 +19,7 @@ for (const eachTag of allTags) {
             disconnectedCallback() {(typeof this.onUnmount=='function')&&this.onMount()}
             adoptedCallback() {(typeof this.onAdopt=='function')&&this.onAdopt()}
         }
+        html.${eachTag}[isHooked] = true
         try {
             customElements.define(html.${eachTag}.tag,html.${eachTag},{extends:${tagEscaped}})
         } catch (error) {
