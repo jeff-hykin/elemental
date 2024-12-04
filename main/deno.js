@@ -666,6 +666,7 @@ try {
 }
 
 export const passAlongProps = (element, properties, {isSvg=false}={}) => {
+    let styleString = ""
     if (properties instanceof Object) {
         for (let [key, value] of Object.entries(properties)) {
             // 
