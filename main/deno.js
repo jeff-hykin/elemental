@@ -1,6 +1,6 @@
-import { toString, indent } from "https://deno.land/x/good@1.6.1.3/string.js"
+import { toString, indent } from "https://deno.land/x/good@1.13.2.0/string.js"
 // import { toString, indent } from "/Users/jeffhykin/repos/good-js/source/string.js"
-import { allKeyDescriptions, } from 'https://deno.land/x/good@0.7.8/value.js'
+import { allKeyDescriptions, } from 'https://deno.land/x/good@1.13.2.0/value.js'
     // minimized xhtm from: https://github.com/dy/xhtm
     const FIELD = "\ue000",
         QUOTES = "\ue001"
@@ -663,6 +663,88 @@ try {
     })
 } catch (error) {
     
+}
+
+export const passAlongProps = (element, properties) => {
+    if (properties instanceof Object) {
+        for (let [key, value] of Object.entries(properties)) {
+            // 
+            // styles
+            // 
+            if (key == 'style') {
+                // styles are done at the end in a batch
+                styleString +=  ElementalClass.css(value)
+                continue
+            }
+
+            // 
+            // events
+            // 
+            if (key.slice(0,2) == 'on' && (key.slice(2,3).toLowerCase() !== key.slice(2,3)) && value instanceof Function) {
+                element.addEventListener(key.slice(2).toLowerCase(), value)
+            }
+
+            // 
+            // css classes
+            // 
+            if (key ==  'class') {
+                if (value instanceof Array) {
+                    value = value.join(" ")
+                } else if (value instanceof Object) {
+                    let newValue = ""
+                    for (const [classString, enable] of Object.entries(value)) {
+                        if (enable) {
+                            newValue += classString
+                        }
+                    }
+                    value = newValue
+                }
+            }
+            
+            // 
+            // svgs
+            // 
+            if (isSvg) {
+                if (value instanceof Array) {
+                    value = value.join(" ")
+                }
+                element.setAttribute(kebabCase(key), value)
+                continue
+            }
+            
+            // 
+            // direct html attributes
+            // 
+            if (value != null && !(value instanceof Object) && validNonCallbackHtmlAttributes.has(key)) {
+                element.setAttribute(key, value)
+            }
+
+            // 
+            // the object property
+            // 
+            try {
+                element[key] = value
+            } catch (error) {
+                
+            }
+
+            // 
+            // lazy styles
+            // 
+            if (isValidStyleAttribute(key)) {
+                styleString += `;${key}: ${value};`
+            }
+        }
+    }
+
+    if (styleString) {
+        // set all styles at once
+        element.setAttribute("style", styleString)
+    }
+    if (properties.children) {
+        ElementalClass.appendChildren(element, ...children)
+    }
+    return element
 }
 
 export const combineClasses = ElementalClass.combineClasses
