@@ -743,7 +743,7 @@ export const passAlongProps = (element, properties, {isSvg=false}={}) => {
         element.setAttribute("style", styleString)
     }
     if (properties.children) {
-        ElementalClass.appendChildren(element, ...children)
+        ElementalClass.appendChildren(element, ...properties.children)
     }
     return element
 }
