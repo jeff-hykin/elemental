@@ -3,8 +3,7 @@
 For VS Code use [this extension](https://marketplace.visualstudio.com/items?itemName=pushqrdx.inline-html) to get syntax highlighting.
 
 ```js
-var { html } = await import("https://cdn.skypack.dev/@!!!!!/elemental@0.5.40")
-
+var { html } = await import("https://esm.sh/gh/jeff-hykin/elemental@0.6.3")
 // create a custom component
 const myAsyncCustomComponent = async ({ style, children, ...props }) => {
     // load a big'ole depenency like d3
@@ -33,7 +32,7 @@ You can also use it with JSX:
 
 ```jsx
 /** @jsx html */
-var { html } = await import("https://deno.land/x/elementalist@0.5.34/main/deno.js?code")
+var { html } = await import("https://esm.sh/gh/jeff-hykin/elemental@0.6.3")
 
 // create a custom component
 const myAsyncCustomComponent = async ({ style, children, ...props }) => {
