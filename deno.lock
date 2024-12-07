@@ -1,6 +1,8 @@
 {
   "version": "4",
   "remote": {
+    "https://cdn.skypack.dev/-/@!!!!!/elemental@v0.5.40-DV5IBrcN2nkO6U1jH4KY/dist=es2019,mode=imports/optimized/@!!!!!/elemental.js": "898200d562d9f8d286faf5ddc8bb80e2b660155ad1a0a36426a944e1378bb3ba",
+    "https://cdn.skypack.dev/@!!!!!/elemental@0.5.40": "35cd3dee7d1b41a2aa09400fb9f911b168e84323af33faa0e37b156a6367b070",
     "https://deno.land/x/good@1.13.2.0/flattened/all_equal.js": "b7e179e04347505c4b9fc6dd0e66533fba817756a28633820fe83f0c437e3744",
     "https://deno.land/x/good@1.13.2.0/flattened/all_key_descriptions.js": "9ca2bb16873db46ab1bcab6a49012136b51976bbadf155cc11368c5ccb935420",
     "https://deno.land/x/good@1.13.2.0/flattened/all_keys.js": "71ed06664181d08960b7df5e401bf7f82224457a65b41d5ddd71fd0e5e61b0cc",

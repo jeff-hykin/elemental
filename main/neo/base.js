@@ -258,7 +258,7 @@ class ElementalClass {
 //                 }
 //             }
 //             if (extraInfo.isBuiltinElement) {
-                
+// 
 //             }
 //         },
 //         classNameMangle: (tag, properties, children, extraInfo) => {
