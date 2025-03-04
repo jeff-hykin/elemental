@@ -487,6 +487,7 @@ class ElementalClass {
                         if (value instanceof Array) {
                             value = value.join(" ")
                         }
+                        element.setAttribute(key, value)
                         element.setAttribute(kebabCase(key), value)
                         continue
                     }
@@ -709,6 +710,7 @@ export const passAlongProps = (element, properties, {isSvg=false}={}) => {
                 if (value instanceof Array) {
                     value = value.join(" ")
                 }
+                element.setAttribute(key, value)
                 element.setAttribute(kebabCase(key), value)
                 continue
             }
